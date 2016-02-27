@@ -20,21 +20,51 @@ class FalseV : ValueV {}
 class ExprC {
     
 }
-class LiteralC : ExprC {
-    let val : ValueV
-    init(_val : ValueV) {
-        val = _val
-    }
-}
-class PlusC : ExprC {
-    let left : ExprC
-    let right : ExprC
-    init(_left : ExprC, _right : ExprC) {
-        left = _left
-        right = _right
+
+class NumC : ExprC {
+    let num : Int
+    init(_ num : Int) {
+        self.num = num;
     }
 }
 
+class LiteralC : ExprC {
+    let val : ValueV
+    init(_ val : ValueV) {
+        self.val = val
+    }
+}
+
+class PlusC : ExprC {
+    let left : ExprC
+    let right : ExprC
+    init(_ left : ExprC,_ right : ExprC) {
+        self.left = left
+        self.right = right
+    }
+}
+
+class IdC : ExprC {
+    let name : String
+    init(_ name : String) {
+        self.name = name
+    }
+}
+
+class AppC : ExprC {
+    let function : ExprC
+    let args = [ExprC]
+    init(_ function : ExprC,_ args : [ExprC]) {
+        self.function = function
+        self.args = args
+    }
+}
+
+
+class TrueC : ExprC {}
+class FalseC : ExprC {}
+
+// Interp
 func Interp(exp : ExprC)->ValueV {
     if ((exp as? LiteralC) != nil) {
         return (exp as! LiteralC).val
