@@ -1,9 +1,5 @@
 import Foundation
 
-print("Hello, World!")
-
-print("This is a test")
-
 // Values
 class ValueV {
     func toString()->String{
@@ -11,9 +7,8 @@ class ValueV {
     }
 }
 class NumV : ValueV {
-    //let val : Int
-    let val : Int
-    init(_ val : Int) {
+    let val : Double
+    init(_ val : Double) {
         self.val = val
     }
     override func toString()->String{
@@ -34,7 +29,7 @@ class FalseV : ValueV {
 // Expressions
 class ExprC {
     func evaluate() -> ValueV {
-        preconditionFailure("This method must be overridden");
+        preconditionFailure("This method must be overridden")
     }
 }
 
@@ -48,7 +43,7 @@ class LiteralC : ExprC {
     }
 }
 
-class PlusC : ExprC {
+class BinopC : ExprC {
     let left : ExprC
     let right : ExprC
     init(_ left : ExprC, _ right : ExprC) {
@@ -56,9 +51,74 @@ class PlusC : ExprC {
         self.right = right
     }
     override func evaluate() -> ValueV {
-        let lval = left.evaluate() as! NumV
-        let rval = right.evaluate() as! NumV
-        return NumV(lval.val + rval.val)
+        let l = left.evaluate()
+        let r = left.evaluate()
+        if (l is NumV && r is NumV) {
+            return doOperator((l as! NumV).val, r: (r as! NumV).val)
+        } else {
+            preconditionFailure("Illegal Types")
+        }
+    }
+    func doOperator(l : Double, r : Double) -> ValueV {
+        preconditionFailure("This method must be overridden");
+    }
+}
+
+class PlusC : BinopC {
+    override func doOperator(l : Double, r : Double) -> ValueV {
+        return NumV(l + r);
+    }
+}
+
+class MinusC : BinopC {
+    override func doOperator(l : Double, r : Double) -> ValueV {
+        return NumV(l - r);
+    }
+}
+
+class MultC : BinopC {
+    override func doOperator(l : Double, r : Double) -> ValueV {
+        return NumV(l * r);
+    }
+}
+
+class DivC : BinopC {
+    override func doOperator(l : Double, r : Double) -> ValueV {
+        if (r == 0) {
+            preconditionFailure("Divide By Zero")
+        }
+        return NumV(l / r);
+    }
+}
+
+class LeqC : BinopC {
+    override func doOperator(l : Double, r : Double) -> ValueV {
+        if (l <= r) {
+            return TrueV()
+        } else {
+            return FalseV()
+        }
+    }
+}
+
+class CondC : ExprC {
+    let cond : ExprC
+    let left : ExprC
+    let right : ExprC
+    init (_ cond : ExprC, _ left : ExprC, _ right : ExprC) {
+        self.cond = cond
+        self.left = left
+        self.right = right
+    }
+    override func evaluate() -> ValueV {
+        let cval = cond.evaluate()
+        if (cval is TrueV) {
+            return left.evaluate()
+        } else if (cval is FalseV) {
+            return right.evaluate()
+        } else {
+            preconditionFailure("Illegal Types")
+        }
     }
 }
 
@@ -78,6 +138,18 @@ class AppC : ExprC {
     }
 }
 
-let thing = PlusC(LiteralC(NumV(4)), LiteralC(NumV(6)))
+func NumC(num : Double) -> ExprC {
+    return LiteralC(NumV(num))
+}
 
-print((thing.evaluate() as! NumV).val)
+func FalseC() -> ExprC {
+    return LiteralC(FalseV())
+}
+
+func TrueC() -> ExprC {
+    return LiteralC(TrueV())
+}
+
+let thing = CondC(LeqC(NumC(4), NumC(6)), TrueC(), FalseC())
+
+print(thing.evaluate().toString())
