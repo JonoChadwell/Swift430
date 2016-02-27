@@ -1,20 +1,26 @@
 import Foundation
 
-print("Hello, World!")
+println("Hello, World!")
 
-print("This is a test")
+println("This is a test")
 
 // Values
-class ValueV {}
+class ValueV {
+    func toString()->String{
+        preconditionFailure("This method must be overridden")
+    }
+}
 class NumV : ValueV {
     let val : Int
     init(_ val : Int) {
         self.val = val
     }
+    override func toString()->String{
+        return String(val);
+    }
 }
 class TrueV : ValueV {}
 class FalseV : ValueV {}
-
 
 // Expressions
 class ExprC {
@@ -22,6 +28,14 @@ class ExprC {
         preconditionFailure("We are pretending this is abstract");
     }
 }
+
+class NumC : ExprC {
+    let num : Int
+    init(_ num : Int) {
+        self.num = num;
+    }
+}
+
 class LiteralC : ExprC {
     let val : ValueV
     init(_ val : ValueV) {
