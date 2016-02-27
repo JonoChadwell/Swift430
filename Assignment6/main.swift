@@ -3,7 +3,7 @@ import Foundation
 // Values
 class ValueV {
     func toString()->String{
-        preconditionFailure("This method must be overridden")
+        fatalError("This method must be overridden")
     }
 }
 class NumV : ValueV {
@@ -29,7 +29,7 @@ class FalseV : ValueV {
 // Expressions
 class ExprC {
     func evaluate() -> ValueV {
-        preconditionFailure("This method must be overridden")
+        fatalError("This method must be overridden")
     }
 }
 
@@ -56,11 +56,11 @@ class BinopC : ExprC {
         if (l is NumV && r is NumV) {
             return doOperator((l as! NumV).val, r: (r as! NumV).val)
         } else {
-            preconditionFailure("Illegal Types")
+            fatalError("Illegal Types")
         }
     }
     func doOperator(l : Double, r : Double) -> ValueV {
-        preconditionFailure("This method must be overridden");
+        fatalError("This method must be overridden");
     }
 }
 
@@ -85,7 +85,7 @@ class MultC : BinopC {
 class DivC : BinopC {
     override func doOperator(l : Double, r : Double) -> ValueV {
         if (r == 0) {
-            preconditionFailure("Divide By Zero")
+            fatalError("Divide By Zero")
         }
         return NumV(l / r);
     }
@@ -117,7 +117,7 @@ class CondC : ExprC {
         } else if (cval is FalseV) {
             return right.evaluate()
         } else {
-            preconditionFailure("Illegal Types")
+            fatalError("Illegal Types")
         }
     }
 }
