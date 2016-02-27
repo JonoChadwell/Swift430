@@ -1,24 +1,31 @@
 import Foundation
 
-print("Hello, World!")
+println("Hello, World!")
 
-print("This is a test")
+println("This is a test")
 
 // Values
-class ValueV {}
+class ValueV {
+    func toString()->String{
+        preconditionFailure("This method must be overridden")
+    }
+}
 class NumV : ValueV {
-    let val : Int
+    //let val : Int
+    var val : Int
     init(_val : Int) {
         val = _val
+    }
+    override func toString()->String{
+        return String(val);
     }
 }
 class TrueV : ValueV {}
 class FalseV : ValueV {}
 
-
 // Expressions
 class ExprC {
-    
+
 }
 class LiteralC : ExprC {
     let val : ValueV
@@ -47,5 +54,9 @@ func Interp(exp : ExprC)->ValueV {
 }
 
 let thing = PlusC(_left:LiteralC(_val:NumV(_val:4)), _right:LiteralC(_val:NumV(_val:5)))
+let numV = NumV(_val:5);
 
-print((Interp(thing) as! NumV).val)
+println(numV.toString())
+
+
+println((Interp(thing) as! NumV).val)
