@@ -52,39 +52,39 @@ class BinopC : ExprC {
     }
     override func evaluate() -> ValueV {
         let l = left.evaluate()
-        let r = left.evaluate()
+        let r = right.evaluate()
         if (l is NumV && r is NumV) {
-            return doOperator((l as! NumV).val, r: (r as! NumV).val)
+            return doOperator((l as! NumV).val, (r as! NumV).val)
         } else {
             fatalError("Illegal Types")
         }
     }
-    func doOperator(l : Double, r : Double) -> ValueV {
+    func doOperator(l : Double, _ r : Double) -> ValueV {
         fatalError("This method must be overridden");
     }
 }
 
 class PlusC : BinopC {
-    override func doOperator(l : Double, r : Double) -> ValueV {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
         return NumV(l + r);
     }
 }
 
 class MinusC : BinopC {
-    override func doOperator(l : Double, r : Double) -> ValueV {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
         return NumV(l - r);
     }
 }
 
 class MultC : BinopC {
-    override func doOperator(l : Double, r : Double) -> ValueV {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
         return NumV(l * r);
     }
 }
 
 class DivC : BinopC {
 
-    override func doOperator(l : Double, r : Double) -> ValueV {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
         if (r == 0) {
             fatalError("Divide By Zero")
         }
@@ -93,7 +93,7 @@ class DivC : BinopC {
 }
 
 class LeqC : BinopC {
-    override func doOperator(l : Double, r : Double) -> ValueV {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
         if (l <= r) {
             return TrueV()
         } else {
@@ -162,15 +162,15 @@ func parse(input : AnyObject) -> ExprC {
             let first = array[0] as! String
             switch (first) {
                     case "+":
-                        return PlusC (parse(input[1]), parse(input[2]))
+                        return PlusC (parse(array[1]), parse(array[2]))
                     case "-":
-                        return MinusC (parse(input[1]), parse(input[2]))
+                        return MinusC (parse(array[1]), parse(array[2]))
                     case "*":
-                        return MultC (parse(input[1]), parse(input[2]))
+                        return MultC (parse(array[1]), parse(array[2]))
                     case "/":
-                        return DivC (parse(input[1]), parse(input[2]))
+                        return DivC (parse(array[1]), parse(array[2]))
                     default:
-                        return IdC (input[0] as! String)
+                        return IdC (array[0] as! String)
             }
         }
         else {
@@ -182,9 +182,5 @@ func parse(input : AnyObject) -> ExprC {
     }
 }
 
-print(parse(["-", 3, 2]).evaluate().toString())
+print(parse(["*", 2, ["+", 3, 2]]).evaluate().toString())
 
-print(parse(4).evaluate().toString())
-
-let thing = CondC(LeqC(NumC(4), NumC(6)), TrueC(), FalseC())
-print(thing.evaluate().toString())
