@@ -152,9 +152,7 @@ func TrueC() -> ExprC {
 }
 
 func parse(input : AnyObject) -> ExprC {
-    if (input is Int){
-        return LiteralC(NumV(input as! Double))
-    } else if (input is Double) {
+    if input is Int || input is Double {
         return LiteralC(NumV(input as! Double))
     } else if (input is String) {
         return IdC(input as! String)
@@ -184,8 +182,9 @@ func parse(input : AnyObject) -> ExprC {
     }
 }
 
-let thing = CondC(LeqC(NumC(4), NumC(6)), TrueC(), FalseC())
-parse(["plus", ["minus", 1, 2], [2]])
-print(parse(["+", 2, ["-", 3, 2]]).evaluate().toString())
+print(parse(["-", 3, 2]).evaluate().toString())
 
+print(parse(4).evaluate().toString())
+
+let thing = CondC(LeqC(NumC(4), NumC(6)), TrueC(), FalseC())
 print(thing.evaluate().toString())
