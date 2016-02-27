@@ -12,7 +12,7 @@ class NumV : ValueV {
         self.val = val
     }
     override func toString()->String{
-        return String(val);
+        return String(stringInterpolationSegment: val);
     }
 }
 class TrueV : ValueV {
@@ -83,6 +83,7 @@ class MultC : BinopC {
 }
 
 class DivC : BinopC {
+
     override func doOperator(l : Double, r : Double) -> ValueV {
         if (r == 0) {
             fatalError("Divide By Zero")
@@ -150,6 +151,41 @@ func TrueC() -> ExprC {
     return LiteralC(TrueV())
 }
 
+func parse(input : AnyObject) -> ExprC {
+    if (input is Int){
+        return LiteralC(NumV(input as! Double))
+    } else if (input is Double) {
+        return LiteralC(NumV(input as! Double))
+    } else if (input is String) {
+        return IdC(input as! String)
+    } else if (input is [AnyObject]) {
+        let array = input as! [AnyObject]
+        if (array[0] is String) {
+            let first = array[0] as! String
+            switch (first) {
+                    case "+":
+                        return PlusC (parse(input[1]), parse(input[2]))
+                    case "-":
+                        return MinusC (parse(input[1]), parse(input[2]))
+                    case "*":
+                        return MultC (parse(input[1]), parse(input[2]))
+                    case "/":
+                        return DivC (parse(input[1]), parse(input[2]))
+                    default:
+                        return IdC (input[0] as! String)
+            }
+        }
+        else {
+            fatalError("wrong format")
+        }
+    } else
+    {
+        fatalError("blah")
+    }
+}
+
 let thing = CondC(LeqC(NumC(4), NumC(6)), TrueC(), FalseC())
+parse(["plus", ["minus", 1, 2], [2]])
+print(parse(["+", 2, ["-", 3, 2]]).evaluate().toString())
 
 print(thing.evaluate().toString())
