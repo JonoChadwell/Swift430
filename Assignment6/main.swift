@@ -48,7 +48,7 @@ class CloV : ValueV {
 // Expressions
 class ExprC {
     func evaluate(env:Dictionary<String,ValueV>) -> ValueV {
-        preconditionFailure("This method must be overridden");
+        fatalError("This method must be overridden");
     }
 }
 class LamC: ExprC {
@@ -83,9 +83,75 @@ class BinopC : ExprC {
         self.right = right
     }
     override func evaluate(env:Dictionary<String,ValueV>) -> ValueV {
-        let lval = left.evaluate(env) as! NumV
-        let rval = right.evaluate(env) as! NumV
-        return NumV(lval.val + rval.val)
+        let l = left.evaluate(env)
+        let r = right.evaluate(env)
+        if (l is NumV && r is NumV) {
+            return doOperator((l as! NumV).val, (r as! NumV).val)
+        } else {
+            fatalError("Illegal Types")
+        }
+    }
+    func doOperator(l : Double, _ r : Double) -> ValueV {
+        fatalError("This method must be overridden");
+    }
+}
+
+class PlusC : BinopC {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
+        return NumV(l + r);
+    }
+}
+
+class MinusC : BinopC {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
+        return NumV(l - r);
+    }
+}
+
+class MultC : BinopC {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
+        return NumV(l * r);
+    }
+}
+
+class DivC : BinopC {
+
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
+        if (r == 0) {
+            fatalError("Divide By Zero")
+        }
+        return NumV(l / r);
+    }
+}
+
+class LeqC : BinopC {
+    override func doOperator(l : Double, _ r : Double) -> ValueV {
+        if (l <= r) {
+            return TrueV()
+        } else {
+            return FalseV()
+        }
+    }
+}
+
+class CondC : ExprC {
+    let cond : ExprC
+    let left : ExprC
+    let right : ExprC
+    init (_ cond : ExprC, _ left : ExprC, _ right : ExprC) {
+        self.cond = cond
+        self.left = left
+        self.right = right
+    }
+    override func evaluate(env:Dictionary<String,ValueV>) -> ValueV {
+        let cval = cond.evaluate(env)
+        if (cval is TrueV) {
+            return left.evaluate(env)
+        } else if (cval is FalseV) {
+            return right.evaluate(env)
+        } else {
+            fatalError("Illegal Types")
+        }
     }
 }
 
@@ -132,6 +198,15 @@ func extendEnv (s : Array<String>, v : Array<ValueV>, env : Dictionary<String, V
     
     return dict
 }
+
+func NumC(num : Double) -> ExprC {
+    return LiteralC(NumV(num))
+}
+
+func FalseC() -> ExprC {
+    return LiteralC(FalseV())
+}
+
 
 func map (l : Array<ExprC>, d : Dictionary<String, ValueV>)->Array<ValueV> {
     var newArray : Array<ValueV> = []
@@ -181,10 +256,42 @@ var numV = NumV(5)
 
 var nonEmptyEnv = ["a" : numV]
 
+func TrueC() -> ExprC {
+    return LiteralC(TrueV())
+}
 
-println((idcTest.evaluate(nonEmptyEnv) as! NumV).val)
-println((thing.evaluate(emptyEnv) as! NumV).val)
+func parse(input : AnyObject) -> ExprC {
+    if input is Int || input is Double {
+        return LiteralC(NumV(input as! Double))
+    } else if (input is String) {
+        return IdC(input as! String)
+    } else if (input is [AnyObject]) {
+        let array = input as! [AnyObject]
+        if (array[0] is String) {
+            let first = array[0] as! String
+            switch (first) {
+                    case "+":
+                        return PlusC (parse(array[1]), parse(array[2]))
+                    case "-":
+                        return MinusC (parse(array[1]), parse(array[2]))
+                    case "*":
+                        return MultC (parse(array[1]), parse(array[2]))
+                    case "/":
+                        return DivC (parse(array[1]), parse(array[2]))
+                    default:
+                        return IdC (array[0] as! String)
+            }
+        }
+        else {
+            fatalError("wrong format")
+        }
+    } else
+    {
+        fatalError("blah")
+    }
+}
 
+print(parse(["*", 2, ["+", 3, 2]]).evaluate(emptyEnv).toString())
 
 
 
