@@ -6,6 +6,7 @@ class ValueV {
         fatalError("This method must be overridden")
     }
 }
+
 class NumV : ValueV {
     let val : Double
     init(_ val : Double) {
@@ -15,16 +16,19 @@ class NumV : ValueV {
         return String(stringInterpolationSegment: val);
     }
 }
+
 class TrueV : ValueV {
     override func toString()->String {
         return "true"
     }
 }
+
 class FalseV : ValueV {
     override func toString()->String {
         return "false"
     }
 }
+
 class CloV : ValueV {
     let args : Array<String>
     let body : ExprC
@@ -42,15 +46,13 @@ class CloV : ValueV {
     
 }
 
-  //[cloV (arg : (listof symbol)) (body : ExprC) (env : Env)]
-
-
-// Expressions
+// Expression Types
 class ExprC {
     func evaluate(env:Dictionary<String,ValueV>) -> ValueV {
         fatalError("This method must be overridden");
     }
 }
+
 class LamC: ExprC {
     var args : Array<String>
     var body : ExprC
@@ -82,6 +84,7 @@ class BinopC : ExprC {
         self.left = left
         self.right = right
     }
+    
     override func evaluate(env:Dictionary<String,ValueV>) -> ValueV {
         let l = left.evaluate(env)
         let r = right.evaluate(env)
@@ -91,6 +94,7 @@ class BinopC : ExprC {
             fatalError("Illegal Types")
         }
     }
+    
     func doOperator(l : Double, _ r : Double) -> ValueV {
         fatalError("This method must be overridden");
     }
@@ -166,6 +170,31 @@ class IdC : ExprC {
     }
 }
 
+// AppC helper functions
+func map(l : Array<ExprC>, _ d : Dictionary<String, ValueV>)->Array<ValueV> {
+    var newArray : Array<ValueV> = []
+    
+    for exprc in l {
+        newArray.append(exprc.evaluate(d))
+    }
+    
+    return newArray
+}
+
+func extendEnv(s : Array<String>, _ v : Array<ValueV>, _ env : Dictionary<String, ValueV>)->Dictionary<String, ValueV> {
+    var dict:Dictionary<String, ValueV> = env
+    
+    if (s.count != v.count) {
+        fatalError("Wrongarity");
+    } else {
+        for i in 0...(s.count - 1){
+            dict[s[i]] = v[i];
+        }
+    }
+    
+    return dict
+}
+
 class AppC : ExprC {
     let function : ExprC
     let args : [ExprC]
@@ -180,84 +209,12 @@ class AppC : ExprC {
         
         return cloV.body.evaluate(newEnv)
     }
-    
 }
 
-
-
-func extendEnv (s : Array<String>, v : Array<ValueV>, env : Dictionary<String, ValueV>)->Dictionary<String, ValueV> {
-    var dict:Dictionary<String, ValueV> = env
-    
-    if (s.count != v.count) {
-        fatalError("Wrongarity");
-    } else {
-        for i in 0...(s.count - 1){
-            dict[s[i]] = v[i];
-        }
-    }
-    
-    return dict
-}
-
-func NumC(num : Double) -> ExprC {
-    return LiteralC(NumV(num))
-}
-
-func FalseC() -> ExprC {
-    return LiteralC(FalseV())
-}
-
-
-func map (l : Array<ExprC>, d : Dictionary<String, ValueV>)->Array<ValueV> {
-    var newArray : Array<ValueV> = []
-    
-    for exprc in l {
-        newArray.append(exprc.evaluate(d))
-    }
-    
-    return newArray
-}
-
-var emptyEnv = [String : ValueV]()
-
-let app :ExprC = AppC(LamC(["a", "b"], PlusC(IdC("a"), IdC("b"))), [LiteralC(NumV(2)), LiteralC(NumV(1))])
-let val : ValueV = app.evaluate(emptyEnv)
-
-println("expecting value of 3 received -> " + val.toString())
-
-//var arr : Array<ExprC> = [LiteralC(1), LiteralC(2), LiteralC(3)]
-var arr : Array<ValueV> = map([LiteralC(NumV(1)), LiteralC(FalseV()), LiteralC(NumV(3))], emptyEnv)
-
-
-println("expect following values to be 1, false, and 3 ")
-
-for numb in arr {
-    println(numb.toString())
-}
-
-
-println("expect to be 'true' value is -> " + (extendEnv(["a", "b"], [TrueV(), FalseV()], [:]))["a"]!.toString())
-println("expect to be '10' value is -> " + (extendEnv(["a", "b"], [NumV(10), FalseV()], [:]))["a"]!.toString())
-println("expect to be '30' value is -> " + (extendEnv(["a", "b"], [TrueV(), NumV(30)], [:]))["b"]!.toString())
-
-/*
-[appC (f a) (local ([define f-value (interp f env)])
-    (interp (cloV-body f-value)
-    (extend-env (cloV-arg f-value)
-    (map (lambda (i) (interp i env)) a)
-    (cloV-env f-value))))]
-
-*/
-
-
-let thing = PlusC(LiteralC(NumV(4)), LiteralC(NumV(6)))
-let idcTest = IdC("a")
-var numV = NumV(5)
-
-var nonEmptyEnv = ["a" : numV]
-
-func TrueC() -> ExprC {
-    return LiteralC(TrueV())
+// Evaluate a value
+let empty = [String : ValueV]()
+func topEval(expression : AnyObject) -> String {
+    return parse(expression).evaluate(empty).toString()
 }
 
 func parse(input : AnyObject) -> ExprC {
@@ -271,29 +228,45 @@ func parse(input : AnyObject) -> ExprC {
             let first = array[0] as! String
             switch (first) {
                     case "+":
-                        return PlusC (parse(array[1]), parse(array[2]))
+                        return PlusC(parse(array[1]), parse(array[2]))
                     case "-":
-                        return MinusC (parse(array[1]), parse(array[2]))
+                        return MinusC(parse(array[1]), parse(array[2]))
                     case "*":
-                        return MultC (parse(array[1]), parse(array[2]))
+                        return MultC(parse(array[1]), parse(array[2]))
                     case "/":
-                        return DivC (parse(array[1]), parse(array[2]))
+                        return DivC(parse(array[1]), parse(array[2]))
+                    case "<=":
+                        return LeqC(parse(array[1]), parse(array[2]))
+                    case "func":
+                        return LamC(array[1] as! [String], parse(array[2]))
+                    case "if":
+                        return CondC(parse(array[1]), parse(array[2]), parse(array[3]))
                     default:
-                        return IdC (array[0] as! String)
+                        return AppC(parse(array[0]), array.dropFirst().map(parse))
             }
+        } else {
+            return AppC(parse(array[0]), array.dropFirst().map(parse))
         }
-        else {
-            fatalError("wrong format")
-        }
-    } else
-    {
+    } else {
         fatalError("blah")
     }
 }
 
-print(parse(["*", 2, ["+", 3, 2]]).evaluate(emptyEnv).toString())
+func test(expected : String, _ actual : String) {
+    if (expected == actual) {
+        print("Test Passed: " + expected + " -> " + actual)
+    } else {
+        print("Test Failed: " + expected + " -> " + actual)
+    }
+}
 
-
-
+// Test Cases
+test("3.0", AppC(LamC(["a", "b"], PlusC(IdC("a"), IdC("b"))), [LiteralC(NumV(2)), LiteralC(NumV(1))]).evaluate(empty).toString())
+test("true", (extendEnv(["a", "b"], [TrueV(), FalseV()], [:]))["a"]!.toString())
+test("10.0", (extendEnv(["a", "b"], [NumV(10), FalseV()], [:]))["a"]!.toString())
+test("30.0", (extendEnv(["a", "b"], [TrueV(), NumV(30)], [:]))["b"]!.toString())
+test("10.0", topEval(["*", 2, ["+", 3, 2]]))
+test("7.0", topEval([["func", ["a", "b"], ["+", "a", "b"]], 2, 5]))
+test("true", topEval([["func", ["f"], ["f", 4]], ["func", ["a"], ["<=", "a", 6]]]))
 
 
