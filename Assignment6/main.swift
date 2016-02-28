@@ -3,17 +3,16 @@ import Foundation
 // Values
 class ValueV {
     func toString()->String{
-        preconditionFailure("This method must be overridden")
+        fatalError("This method must be overridden")
     }
 }
 class NumV : ValueV {
-    //let val : Int
-    let val : Int
-    init(_ val : Int) {
+    let val : Double
+    init(_ val : Double) {
         self.val = val
     }
     override func toString()->String{
-        return String(val);
+        return String(stringInterpolationSegment: val);
     }
 }
 class TrueV : ValueV {
@@ -76,7 +75,7 @@ class LiteralC : ExprC {
     }
 }
 
-class PlusC : ExprC {
+class BinopC : ExprC {
     let left : ExprC
     let right : ExprC
     init(_ left : ExprC, _ right : ExprC) {
